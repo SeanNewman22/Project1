@@ -1,0 +1,482 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Text-based adventure game</title>
+        <style>
+            /*This centers my content on the webpage*/
+            div{
+                text-align: center;
+            }
+            /*forming my image tag*/
+            img{
+                width: 300px;
+                height: 267px;
+            }
+            /*I had to center the p tag as well in order to add a margin on top of the tag*/
+            p{
+                margin-top: 40px;
+                width: 500px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            /*this gives some room above my save and load buttons since they are both on the same line*/
+            #save{
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+        <h1>The Sands of Time~</h1>
+        <img src="">
+        <p id="output"></p>
+        <input id="input" type="text" placeholder="Enter your action...">
+        <button id="action">enter</button>
+        <br>
+        <button id="save">save</button>
+        <button id="load">load</button>
+        </div>
+
+        <script>
+            //these variables store information on whether they have been picked up yet and if they all are set to true then the oasis will change description
+            var isCloth = false;
+            var isBracelet = false;
+            var isPyramid = false;
+            //this create's my map and stores basic string information to be displayed
+            var map = [];
+
+            map[0] = "You come upon a vast barren corner of the desert. As you look around a tumbleweed bumps against your leg and rests there."
+            map[1] = "You come upon an abandoned camp."
+            map[2] = "You come upon a broken obelisk. Underneath the obelisk is a hollow space that looks like a jewel used to fit there."
+            map[3] = "You come upon a ruined castle. Inside the castle is a statue of a general pointing to the sky. It feels like something is missing here."
+            map[4] = "All around you is a beautiful oasis. 3 pedestals lie around the oasis. One bears the symbol of a cloth; another bears the symbol of a bracelet; and the final one bears the symbol of a pyramid."
+            map[5] = "You come upon a well."
+            map[6] = "You come upon a formation of rocks."
+            map[7] = "You come upon an arch of rocks. There is a strange crack on the side of the rocks that looks oddly familiar to a keyhole."
+            map[8] = "You come upon a beach."
+
+            //This sets the room the game starts on
+            const initRoom = 4;
+            
+            var mapLocation = initRoom;
+
+            //this creates my image array where I store all the pictures for each seperate room 
+            var images = [];
+            
+            images[0] = "Barren desert.jpg";
+            images[1] = "abandoned camp.jpg";
+            images[2] = "obelisk.jpg";
+            images[3] = "desert castle.jpg";
+            images[4] = "Oasis.jpg";
+            images[5] = "Well.jpg";
+            images[6] = "Formation of rocks.jpg";
+            images[7] = "Arch of rocks.jpg";
+            images[8] = "Beach.jpg";
+
+            //This sets the messages I send to the player in each room when they go farther than they should
+            var blockedPathMessages = [];
+            
+            blockedPathMessages[0] = "The high dunes of the desert block your path.";
+            blockedPathMessages[1] = "You can't go that way.";
+            blockedPathMessages[2] = "You get the feeling that you shouldn't go that way.";
+            blockedPathMessages[3] = "A force prevents you from going any further.";
+            blockedPathMessages[4] = "";
+            blockedPathMessages[5] = "You can't go that way.";
+            blockedPathMessages[6] = "The path that way is not traversable.";
+            blockedPathMessages[7] = "There are rocks in your way.";
+            blockedPathMessages[8] = "There is nothing but the ocean that way.";
+
+            //Creating my items and setting their defaul locations
+            var items = ["crystal", "key", "sword"];
+            var itemLocations = [0, 1, 5];
+
+            //This array stores what the player is carrying
+            var backpack = [];
+
+            //This stores the player's input
+            var playersInput = "";
+
+            //This stores my game messages that will change as the player does actions around the map
+            var gameMessage = "";
+
+            //this stores the strings my game will accept from the player and I set the action variable to an empty string to start
+            var actionsIKnow = ["north", "east", "south", "west", "take", "use", "drop"];
+            var action = "";
+
+            //this stores the strings my game will accept as item names and i initialize the item variable to an empty string to start
+            var itemsIKnow = ["crystal", "key", "sword", "pyramid", "bracelet", "cloth"];
+            var item = "";
+
+            //The img element
+            var image = document.querySelector("img");
+
+            //The input and output fields
+            var output = document.querySelector("#output");
+            var input = document.querySelector("#input");
+
+            //My buttons
+            var actionButton = document.querySelector("#action");
+            var saveButton = document.querySelector("#save");
+            var loadButton = document.querySelector("#load");
+            
+            actionButton.addEventListener("click", clickHandler, false);
+            saveButton.addEventListener("click", saveGame, false);
+            loadButton.addEventListener("click", loadGame, false);
+
+            //Display the player's location
+            render();
+            
+            //this saves my current game's location
+            function saveGame()
+            {
+                localStorage.setItem("currentRoom",mapLocation.toString());
+            }
+            
+            
+            //this loads the previously saved game location
+            function loadGame()
+            {
+                mapLocation = parseInt(localStorage.getItem("currentRoom"));
+                render();
+            }
+
+            function clickHandler()
+            {
+              playGame();
+            }
+
+            function playGame()
+            {
+               //This stores the player's input and makes it all lowercase
+               playersInput = input.value;
+               playersInput = playersInput.toLowerCase();
+
+               //Resetting these variables from the previous turn
+               gameMessage = "";
+               action = "";
+
+               //This is the logic I use to figure out what action the player wants to execute
+               for(i = 0; i < actionsIKnow.length; i++)
+
+            {
+              if(playersInput.indexOf(actionsIKnow[i]) !== -1)
+              {
+                action = actionsIKnow[i];
+                console.log("player's action: " + action);
+                break;
+              }
+            }
+
+            //This is the logic I use to figure out what item the player wants
+            for(i = 0; i < itemsIKnow.length; i++)
+            {
+              if(playersInput.indexOf(itemsIKnow[i]) !== -1)
+              {
+                item = itemsIKnow[i];
+                console.log("player's item: " + item);
+              }
+            }
+
+            //This changes my location based on the input the player provides
+            switch(action)
+            {
+              case "north":
+                if(mapLocation >= 3)
+                {
+                  mapLocation -= 3;
+                }
+                else
+                {
+                  gameMessage = blockedPathMessages[mapLocation];
+                }
+                break;
+
+              case "east":
+                if(mapLocation % 3 != 2)
+                {
+                  mapLocation += 1;
+                }
+                else
+                {
+                  gameMessage = blockedPathMessages[mapLocation];
+                }
+                break;
+
+              case "south":
+                if(mapLocation < 6)
+                {
+                  mapLocation += 3;
+                }
+                else
+
+                  {
+                    gameMessage = blockedPathMessages[mapLocation];
+                  }
+                  break;
+
+                case "west":
+                  if(mapLocation % 3 != 0)
+                  {
+                    mapLocation -= 1;
+                  }
+                  else
+                  {
+                    gameMessage = blockedPathMessages[mapLocation];
+                  }
+                  break;
+
+                case "take":
+                  takeItem()
+                  break;
+
+                case "drop":
+                  dropItem();
+                  break;
+
+                case "use":
+                  useItem();
+                  break;
+                default:
+                  gameMessage = "I don't understand that.";
+              }
+
+              //This renders the game for the player
+              render();
+            }
+
+            function takeItem()
+            {
+               //Finding the index number of the item in the items array
+               var itemIndexNumber = items.indexOf(item);
+
+               //This code sees if the item exists in the game world and if it is at the player's current location?
+               if(itemIndexNumber !== -1
+               && itemLocations[itemIndexNumber] === mapLocation)
+               {
+                 gameMessage = "You take the " + item + ".";
+
+                 //Adding the item to the player's backpack
+                 backpack.push(item);
+
+                 //Removes the item from the game world
+                 items.splice(itemIndexNumber, 1);
+                 itemLocations.splice(itemIndexNumber, 1);
+
+                 console.log("World items: " + items);
+                 console.log("backpack items: " + backpack);
+               }
+               else
+               {
+                   //if the item is not in that location this message will display
+                 gameMessage = "You can't do that.";
+               }
+            }
+
+            function dropItem()
+            {
+               //Try to drop the item only if the backpack isn't empty
+               if(backpack.length !== 0)
+               {
+                 //Finds the item's array index number in the backpack
+                 var backpackIndexNumber = backpack.indexOf(item);
+
+                 //The item is in the backpack if the backpackIndexNumber isn't -1
+                 if(backpackIndexNumber !== -1)
+                 {
+
+                  //Tells the player that the item has been dropped
+                  gameMessage = "You drop the " + item + ".";
+
+                  //Adds the item from the backpack to the game world
+                  items.push(backpack[backpackIndexNumber]);
+                  itemLocations.push(mapLocation);
+
+                  //Removes the item from the player's backpack
+                  backpack.splice(backpackIndexNumber, 1);
+                 }
+                 else
+                 {
+                   //This message displays if the player tries to drop something that's not in the backpack
+                   gameMessage = "You can't do that.";
+                 }
+               }
+               else
+               {
+                 //This message displays if the backpack is empty
+                 gameMessage = "You're not carrying anything.";
+               }
+            }
+
+            function useItem()
+            {
+
+               //Finds the item's array index number in the backpack
+               var backpackIndexNumber = backpack.indexOf(item);
+
+               //Tell the player that he or she isn't carrying it if the index number is -1
+               if(backpackIndexNumber === -1)
+               {
+                 gameMessage = "You're not carrying it.";
+               }
+
+               //This tells the player that the backpack is empty
+               if(backpack.length === 0)
+               {
+                 gameMessage += " Your backpack is empty";
+               }
+
+               //This figures out what to do with the item when it is found in the backpack
+               if(backpackIndexNumber !== -1)
+               {
+                   
+                   //this logic determines what item the player is using and depending where they use it a different game message will be displayed to them
+                 switch(item)
+                 {
+                   case "crystal":
+                    if(mapLocation === 2)
+                    {
+                        gameMessage = "The crystal pops into place in the obelisk. Sand spins all around you till suddenly it stops and you notice the obelisk looks brand new! The magic of this land confuses you greatly. The apex of the obelisk loosens up, it looks like you can take the pyramid."
+                        
+                        //Removes the item from the player's backpack
+                        backpack.splice(backpackIndexNumber, 1);
+                        
+                        //this creates the pyramid item when the player uses the crystal correctly
+                        items.push("pyramid");
+                        itemLocations.push(mapLocation);
+                    }
+                    else
+                    {
+                        gameMessage = "You feel the power from the crystal surge through your veins.";
+                    }
+                     break;
+
+                   case "key":
+                     if(mapLocation === 7)
+                     {
+                       gameMessage = "You place the key into the crack and you are thrown off your feet and land on your back. Upon looking up you see that the space underneath the archway has a rainbow-ish glow to it. Looking through the space you can see a lost civilization teeming with life! How on earth is this possible? And what happened to them all? A shimmering cloth flies through the archway and lands at your feet";
+                         
+                        backpack.splice(backpackIndexNumber, 1);
+                         
+                         //this creates the cloth item when the player uses the key correctly
+                        items.push("cloth");
+                        itemLocations.push(mapLocation);
+                     }
+                     else
+                     {
+                       gameMessage = "You spin the key around your index finger and place it back into your pocket.";
+                     }
+                     break;
+
+                   case "sword":
+                     if(mapLocation === 3)
+                     {
+                       gameMessage = "You place the sword into the general's hand. All of a sudden the man comes to life and kneels at your feet. 'Thank you' he says, 'My people were lost a long time ago and I was sealed here but now I may begin to redeem myself'. The man walks past you dropping his bracelet and departs into the vast desert beyond...";
+
+                        backpack.splice(backpackIndexNumber, 1);
+                         
+                         
+                         //this creates the bracelet item when the player uses the sword correctly
+                        items.push("bracelet");
+                        itemLocations.push(mapLocation);
+                     }
+                     else
+                     {
+                       gameMessage = "You touch the sword's tip. OUCH!";
+                     }
+                     break;
+                         
+                    case "cloth":
+                         if(mapLocation === 4)
+                         {
+                             gameMessage += "You place the cloth on the pedestal and it raises into the air slightly.";
+                             backpack.splice(backpackIndexNumber, 1);
+                             isCloth = true;
+                             
+                             //this code evaluates if the cloth, pyramid, and bracelet have been used and if they all have the oasis's status will change to the game message created below
+                             if(isPyramid && isCloth && isBracelet === true)
+                             {
+                                 gameMessage += " The oasis takes on a golden shimmer and you can see the life around the water start to crawl outwards into the rest of the desert's expanse. Hope for this region may not be lost yet."
+                             }
+                         }
+                         else
+                         {
+                             gameMessage = "The cloth feels weightless in your hands.";
+                         }
+                         break;
+                         
+                    case "pyramid":
+                         if(mapLocation === 4)
+                         {
+                             gameMessage += "You place the pyramid on the pedestal and it raises into the air slightly.";
+                             backpack.splice(backpackIndexNumber, 1);
+                             isPyramid = true;
+                             
+                             if(isPyramid && isCloth && isBracelet === true)
+                             {
+                                 gameMessage += "The oasis takes on a golden shimmer and you can see the life around the water start to crawl outwards into the rest of the desert's expanse. Hope for this region may not be lost yet."
+                             }
+                         }
+                         else
+                         {
+                             gameMessage = "The pyramid's texture is silky smooth.";
+                         }
+                         break;
+                         
+                    case "bracelet":
+                         if(mapLocation === 4)
+                         {
+                             gameMessage += "You place the bracelet on the pedestal and it raises into the air slightly.";
+                             backpack.splice(backpackIndexNumber, 1);
+                             isBracelet = true;
+                             
+                             if(isPyramid && isCloth && isBracelet === true)
+                             {
+                                 gameMessage += "The oasis takes on a golden shimmer and you can see the life around the water start to crawl outwards into the rest of the desert's expanse. Hope for this region may not be lost yet."
+                             }
+                         }
+                         else
+                         {
+                             gameMessage = "You lose track of time as you mindlessly stare into the shiny gold bracelet.";
+                         }
+                         break;
+                        
+                  }
+               }
+            }
+
+            function render()
+            {
+               //Renders the location
+               output.innerHTML = map[mapLocation];
+               image.src = "images/" + images[mapLocation];
+
+               //Displays an item if there's one in this location
+               //Loops through all the game items
+               for(var i = 0; i < items.length; i++)
+               {
+                 //Finds out if there's an item at the location
+                 if(mapLocation === itemLocations[i])
+                 {
+                   //Displays it
+                   output.innerHTML
+                   += "<br>You see a <strong>"
+                   + items[i]
+                   + "</strong> here.";
+                 }
+               }
+
+               //Displays the game message
+               output.innerHTML += "<br><em>" + gameMessage + "</em>";
+
+               //Displays the player's backpack contents
+               if(backpack.length !== 0)
+               {
+                 output.innerHTML += "<br>You are carrying: " + backpack.join(", ");
+               }
+             }
+
+        </script>
+        
+        
+    </body>
+</html>
